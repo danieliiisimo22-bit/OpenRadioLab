@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "method": "UTF-8 source bytes by extension; first-party code, tests and scripts; no dependency or generated code",
+  "excluded": "documentation, manifests/configuration, Cargo.lock, binaries, dependencies, build outputs and private device data",
+  "totalBytes": 211224,
+  "totalFiles": 18,
+  "languages": [
+    {
+      "language": "Rust",
+      "files": 12,
+      "bytes": 163007,
+      "lines": 4438,
+      "percentByBytes": 77.17
+    },
+    {
+      "language": "Slint",
+      "files": 1,
+      "bytes": 36759,
+      "lines": 844,
+      "percentByBytes": 17.4
+    },
+    {
+      "language": "JavaScript",
+      "files": 3,
+      "bytes": 9724,
+      "lines": 196,
+      "percentByBytes": 4.6
+    },
+    {
+      "language": "PowerShell",
+      "files": 1,
+      "bytes": 1524,
+      "lines": 47,
+      "percentByBytes": 0.72
+    },
+    {
+      "language": "Shell",
+      "files": 1,
+      "bytes": 210,
+      "lines": 8,
+      "percentByBytes": 0.1
+    }
+  ],
+  "files": [
+    {
+      "path": "crates/dat-analyzer/src/main.rs",
+      "language": "Rust",
+      "bytes": 13630,
+      "lines": 329,
+      "sha256": "e753d6b43951573e94dd1e0ed990013547aebb02c51b39f6606d7465c801b37d"
+    },
+    {
+      "path": "crates/dat-analyzer/tests/cli.rs",
+      "language": "Rust",
+      "bytes": 2635,
+      "lines": 82,
+      "sha256": "2222b460ea5770d8a41be1480421caada1586cc0222a351660b8e9c603a517a4"
+    },
+    {
+      "path": "crates/dat-format/src/lib.rs",
+      "language": "Rust",
+      "bytes": 31955,
+      "lines": 843,
+      "sha256": "0a0fe5d34c365f7fd708a93dc8e41cd26b99467e174eacf1f15b7378c334604d"
+    },
+    {
+      "path": "crates/radio-app/build.rs",
+      "language": "Rust",
+      "bytes": 257,
+      "lines": 8,
+      "sha256": "d464002062eb29d059a4fd38a5a386b2cc42ee4593bce0ae2c53c7b9a4a6963c"
+    },
+    {
+      "path": "crates/radio-app/src/file_dialog.rs",
+      "language": "Rust",
+      "bytes": 4904,
+      "lines": 138,
+      "sha256": "a6078266b68dd88bcd5c96118e135726c8e1c2d28189ae052db3fbd3a633d7de"
+    },
+    {
+      "path": "crates/radio-app/src/main.rs",
+      "language": "Rust",
+      "bytes": 35572,
+      "lines": 885,
+      "sha256": "f5afa321b6994f7417969e401d86cefe5e7232d75e1f695760fcf1c957c0d9d5"
+    },
+    {
+      "path": "crates/radio-app/src/programming.rs",
+      "language": "Rust",
+      "bytes": 5631,
+      "lines": 128,
+      "sha256": "8591b6f1d338f4efbe921d2e873c424d1024bb57dfbe301341b9df0cf61dece5"
+    },
+    {
+      "path": "crates/radio-app/src/signaling_choices.rs",
+      "language": "Rust",
+      "bytes": 2524,
+      "lines": 80,
+      "sha256": "a25ed974213d01e4c4e965c11910da9d130d086f25446ed11d155b7520ea6a6d"
+    },
+    {
+      "path": "crates/radio-app/src/state.rs",
+      "language": "Rust",
+      "bytes": 7628,
+      "lines": 226,
+      "sha256": "0ce03ca739a6699041a10326c5afa0f9425ee77db7ba870f90b5d0194edf38db"
+    },
+    {
+      "path": "crates/radio-app/ui/main.slint",
+      "language": "Slint",
+      "bytes": 36759,
+      "lines": 844,
+      "sha256": "c25c649e7fed67ea58b660f1b2c7c4b44aea73a149bac435035a89551b0785e7"
+    },
+    {
+      "path": "crates/radio-model/src/lib.rs",
+      "language": "Rust",
+      "bytes": 36700,
+      "lines": 1085,
+      "sha256": "0792cb12fcd50e2f229551d52bd1234ad33861254d9b46ca6b9a30d14e35f8b4"
+    },
+    {
+      "path": "crates/radio-serial/src/lib.rs",
+      "language": "Rust",
+      "bytes": 3900,
+      "lines": 124,
+      "sha256": "0ed16235b6adeda1a97e3d3c89061f88102c76263c76e0a72a6aa803926fbbf6"
+    },
+    {
+      "path": "crates/radio-serial/src/tk2402.rs",
+      "language": "Rust",
+      "bytes": 17671,
+      "lines": 510,
+      "sha256": "5bf0a4cf86da88d458b50d4f430cede8bb0b1734a8cf828e700f37cc6586dd91"
+    },
+    {
+      "path": "scripts/check-public-source.cjs",
+      "language": "JavaScript",
+      "bytes": 2134,
+      "lines": 43,
+      "sha256": "4604d19a9a7d3be8af3243d258ebba4287a835a8ceff948728fdb1d4e4b9d3b1"
+    },
+    {
+      "path": "scripts/check.sh",
+      "language": "Shell",
+      "bytes": 210,
+      "lines": 8,
+      "sha256": "9becdac3949efb100e6aee0473439217ee87a9be5b19293402691177ede141d8"
+    },
+    {
+      "path": "scripts/dev.ps1",
+      "language": "PowerShell",
+      "bytes": 1524,
+      "lines": 47,
+      "sha256": "a8b49fe4aea23450663d1293f919d87939c07dcad92d6c11d73069643849176c"
+    },
+    {
+      "path": "scripts/licenses.cjs",
+      "language": "JavaScript",
+      "bytes": 2725,
+      "lines": 62,
+      "sha256": "ea0a250ba9d37d5de0fcd3d0c4a46d5f347fc8f59dec51095c24c5b3b7d2d96f"
+    },
+    {
+      "path": "scripts/source-inventory.cjs",
+      "language": "JavaScript",
+      "bytes": 4865,
+      "lines": 91,
+      "sha256": "851786e7798cf8ec343996f12d8a001ff5b008982eed871ea73db490c706b8d9"
+    }
+  ]
+}

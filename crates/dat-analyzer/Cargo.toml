@@ -1,0 +1,17 @@
+[package]
+description = "Radio configuration inspection and conversion CLI"
+name = "dat-analyzer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+dat-format.workspace = true
+radio-model.workspace = true
+anyhow.workspace = true
+serde_json.workspace = true
+radio-serial.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+

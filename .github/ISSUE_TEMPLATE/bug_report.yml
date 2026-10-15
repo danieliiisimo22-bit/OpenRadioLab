@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible software or device-profile issue.
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: App version, OS, radio model/type and cable adapter; omit serial numbers.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps and expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: Include a redacted error or diagnostic summary. Do not attach a live radio image or a DAT containing private channels.
+    validations:
+      required: true
+

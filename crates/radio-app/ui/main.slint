@@ -1,0 +1,844 @@
+// SPDX-License-Identifier: GPL-3.0-only
+import  {
+    Button, VerticalBox, LineEdit, ComboBox, CheckBox, ScrollView, TextEdit, Palette
+}  from "std-widgets.slint";
+export struct ChannelRow  {
+    number: string, rx: string, tx: string, decode: string, encode: string,
+    power: string, bandwidth: string, scan: string, optional: string, present: bool,
+}
+export struct ChannelEditor  {
+    rx: string, tx: string, decode: string, encode: string,
+    power: int, bandwidth: int, scan: int, optional: string, optional-known: bool,
+}
+component Cell inherits Text  {
+    color: Palette.foreground;
+    font-size: 12px;
+    overflow: elide;
+    vertical-alignment: center;
+}
+component Caption inherits Text  {
+    color: Palette.foreground;
+    font-size: 12px;
+    font-weight: 600;
+}
+component NavigationItem inherits Rectangle  {
+    in property <string> label;
+    in property <bool> active;
+    in property <bool> dark;
+    callback activated();
+    height: 42px;
+    border-radius: 7px;
+    background: active ? (dark ? #203e52 : #e0effa) : touch.has-hover ? Palette.alternate-background : transparent;
+    Rectangle  {
+        x: 0px;
+        y: 11px;
+        width: 3px;
+        height: 20px;
+        border-radius: 2px;
+        background: active ? #53b6f4 : transparent;
+    }
+    Text  {
+        x: 16px;
+        width: parent.width - 24px;
+        height: parent.height;
+        text: parent.label;
+        vertical-alignment: center;
+        color: parent.active ? (parent.dark ? #8fd0fa : #146295) : Palette.foreground;
+        font-size: 13px;
+        font-weight: parent.active ? 600 : 400;
+    }
+    touch := TouchArea  {
+        clicked =>  {
+            root.activated();
+        }
+    }
+}
+export component MainWindow inherits Window  {
+    in property <string> app-version;
+    title: "Open Radio Lab · " + root.app-version;
+    preferred-width: 1380px;
+    preferred-height: 960px;
+    min-width: 1120px;
+    min-height: 830px;
+    background: root.dark ? #101820 : #f1f4f8;
+    default-font-family: "Segoe UI";
+    default-font-size: 13px;
+    in-out property <bool> dark: true;
+    in-out property <string> path;
+    in-out property <bool> discard-authorized: false;
+    in-out property <bool> form-dirty: false;
+    in-out property <ChannelEditor> editor;
+    in property <[string]> decode-options;
+    in property <[string]> encode-options;
+    in-out property <int> decode-index: 0;
+    in-out property <int> encode-index: 0;
+    in property <string> source-path;
+    in-out property <string> last-saved;
+    in-out property <int> save-format: 0;
+    in property <[ChannelRow]> channels;
+    in property <int> selected: 0;
+    in property <bool> dirty: false;
+    in property <bool> can-undo: false;
+    in property <bool> can-redo: false;
+    in property <bool> can-dat: false;
+    in property <string> source-title: "Sin archivo · editor de configuración";
+    in property <string> status: "Abra un DAT, JSON o CSV desde Archivos.";
+    in property <string> details: "En Conexión puede leer la radio directamente. En Archivos puede abrir una configuración guardada.";
+    in property <bool> error: false;
+    in property <string> connection-status: "Seleccione el puerto para identificar o leer";
+    in property <[string]> port-options;
+    in-out property <int> port-index: 0;
+    in property <bool> read-busy: false;
+    in property <int> read-bytes: 0;
+    in property <string> transfer-progress: "Sin transferencia";
+    in-out property <int> active-section: 0;
+    private property <bool> details-expanded: false;
+    private property <color> surface: root.dark ? #18232d : #ffffff;
+    private property <color> muted: root.dark ? #99acbd : #526477;
+    private property <color> outline: root.dark ? #2c3a47 : #dce3ec;
+    callback import-file(string, bool);
+    callback export-file(string, string);
+    callback choose-file();
+    callback save-as(int);
+    callback select-channel(int);
+    callback apply-editor();
+    callback remove-channel();
+    callback undo();
+    callback redo();
+    callback ports();
+    callback close-discard();
+    callback identify-radio(string);
+    callback read-radio(string);
+    callback write-radio(string);
+    callback toggle-theme();
+    toggle-theme =>  {
+        root.dark = !root.dark;
+        Palette.color-scheme = root.dark ? ColorScheme.dark : ColorScheme.light;
+    }
+    init =>  {
+        Palette.color-scheme = ColorScheme.dark;
+    }
+    VerticalBox  {
+        padding: 16px;
+        spacing: 10px;
+        HorizontalLayout  {
+            height: 54px;
+            spacing: 16px;
+            VerticalBox  {
+                padding: 0px;
+                spacing: 3px;
+                Text  {
+                    text: "OPEN RADIO LAB";
+                    color: root.dark ? #77c4f5 : #176794;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 1.5px;
+                }
+                Text  {
+                    text: root.source-title;
+                    color: Palette.foreground;
+                    font-size: 20px;
+                    font-weight: 600;
+                    overflow: elide;
+                }
+            }
+            Rectangle  {
+                horizontal-stretch: 1;
+            }
+            Text  {
+                text: (root.dirty || root.form-dirty) ? "● Cambios pendientes" : "● Sin cambios pendientes";
+                color: (root.dirty || root.form-dirty) ? (root.dark ? #f4c36b : #94600e) : (root.dark ? #7dd8b0 : #267351);
+                vertical-alignment: center;
+                font-size: 12px;
+            }
+            Button  {
+                text: root.dark ? "Tema claro" : "Tema oscuro";
+                clicked =>  {
+                    root.toggle-theme();
+                }
+            }
+        }
+        HorizontalLayout  {
+            spacing: 14px;
+            vertical-stretch: 1;
+            Rectangle  {
+                width: 144px;
+                background: root.surface;
+                border-radius: 10px;
+                border-width: 1px;
+                border-color: root.outline;
+                VerticalBox  {
+                    padding: 10px;
+                    spacing: 5px;
+                    Text  {
+                        text: "ESPACIO DE TRABAJO";
+                        color: root.muted;
+                        font-size: 10px;
+                        font-weight: 600;
+                        height: 28px;
+                        vertical-alignment: center;
+                    }
+                    NavigationItem  {
+                        label: "Canales";
+                        active: root.active-section == 0;
+                        dark: root.dark;
+                        activated =>  {
+                            if !root.read-busy  {
+                                root.active-section = 0;
+                            }
+                        }
+                    }
+                    NavigationItem  {
+                        label: "Archivos";
+                        active: root.active-section == 1;
+                        dark: root.dark;
+                        activated =>  {
+                            if !root.read-busy  {
+                                root.active-section = 1;
+                            }
+                        }
+                    }
+                    NavigationItem  {
+                        label: "Conexión";
+                        active: root.active-section == 2;
+                        dark: root.dark;
+                        activated =>  {
+                            root.active-section = 2;
+                            if !root.read-busy  {
+                                root.ports();
+                            }
+                        }
+                    }
+                    Rectangle  {
+                        vertical-stretch: 1;
+                    }
+                    Rectangle  {
+                        height: 1px;
+                        background: root.outline;
+                    }
+                    Text  {
+                        text: "TK-2402";
+                        color: Palette.foreground;
+                        font-weight: 600;
+                        height: 23px;
+                        vertical-alignment: center;
+                    }
+                    Text  {
+                        text: "VHF · 136–174 MHz\n16 canales";
+                        color: root.muted;
+                        font-size: 11px;
+                        height: 38px;
+                    }
+                    Text  {
+                        text: "Campos desconocidos\nse conservan.";
+                        color: root.muted;
+                        font-size: 11px;
+                        height: 36px;
+                    }
+                }
+            }
+            if root.active-section == 0 : VerticalBox  {
+                padding: 0px;
+                spacing: 8px;
+                HorizontalLayout  {
+                    height: 30px;
+                    spacing: 10px;
+                    Text  {
+                        text: "Canales";
+                        color: Palette.foreground;
+                        font-size: 22px;
+                        font-weight: 600;
+                    }
+                    Rectangle  {
+                        horizontal-stretch: 1;
+                    }
+                    Button  {
+                        text: "Deshacer";
+                        enabled: root.can-undo && !root.form-dirty;
+                        clicked =>  {
+                            root.undo();
+                        }
+                    }
+                    Button  {
+                        text: "Rehacer";
+                        enabled: root.can-redo && !root.form-dirty;
+                        clicked =>  {
+                            root.redo();
+                        }
+                    }
+                }
+                Rectangle  {
+                    background: root.surface;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.outline;
+                    vertical-stretch: 1;
+                    min-height: 228px;
+                    VerticalBox  {
+                        padding: 1px;
+                        spacing: 0px;
+                        Rectangle  {
+                            height: 32px;
+                            background: root.dark ? #21313f : #eaf0f6;
+                            HorizontalLayout  {
+                                spacing: 6px;
+                                padding-left: 10px;
+                                padding-right: 10px;
+                                Cell  {
+                                    width: 30px;
+                                    text: "CH";
+                                    font-weight: 600;
+                                }
+                                Cell  {
+                                    width: 90px;
+                                    text: "RX / MHz";
+                                    font-weight: 600;
+                                }
+                                Cell  {
+                                    width: 90px;
+                                    text: "TX / MHz";
+                                    font-weight: 600;
+                                }
+                                Cell  {
+                                    width: 104px;
+                                    text: "QT/DQT Decode";
+                                    font-weight: 600;
+                                }
+                                Cell  {
+                                    width: 104px;
+                                    text: "QT/DQT Encode";
+                                    font-weight: 600;
+                                }
+                                Cell  {
+                                    width: 68px;
+                                    text: "Potencia";
+                                    font-weight: 600;
+                                }
+                                Cell  {
+                                    width: 70px;
+                                    text: "Ancho";
+                                    font-weight: 600;
+                                }
+                                Cell  {
+                                    width: 64px;
+                                    text: "Scan Add";
+                                    font-weight: 600;
+                                }
+                                Cell  {
+                                    text: "Señalización";
+                                    font-weight: 600;
+                                    horizontal-stretch: 1;
+                                }
+                            }
+                        }
+                        ScrollView  {
+                            vertical-stretch: 1;
+                            VerticalBox  {
+                                padding: 0px;
+                                spacing: 1px;
+                                for row[index] in root.channels : Rectangle  {
+                                    height: 26px;
+                                    background: index == root.selected ? (root.dark ? #254963 : #dceefa) : (mod(index, 2) == 0 ? root.surface : (root.dark ? #1b2934 : #f6f8fb));
+                                    Rectangle  {
+                                        x: 0px;
+                                        y: 0px;
+                                        width: 3px;
+                                        height: parent.height;
+                                        background: index == root.selected ? #56b7f3 : transparent;
+                                    }
+                                    HorizontalLayout  {
+                                        spacing: 6px;
+                                        padding-left: 10px;
+                                        padding-right: 10px;
+                                        Cell  {
+                                            width: 30px;
+                                            text: row.number;
+                                            font-weight: index == root.selected ? 600 : 400;
+                                        }
+                                        Cell  {
+                                            width: 90px;
+                                            text: row.rx;
+                                        }
+                                        Cell  {
+                                            width: 90px;
+                                            text: row.tx;
+                                        }
+                                        Cell  {
+                                            width: 104px;
+                                            text: row.decode;
+                                        }
+                                        Cell  {
+                                            width: 104px;
+                                            text: row.encode;
+                                        }
+                                        Cell  {
+                                            width: 68px;
+                                            text: row.power;
+                                        }
+                                        Cell  {
+                                            width: 70px;
+                                            text: row.bandwidth;
+                                        }
+                                        Cell  {
+                                            width: 64px;
+                                            text: row.scan;
+                                        }
+                                        Cell  {
+                                            text: row.optional;
+                                            horizontal-stretch: 1;
+                                        }
+                                    }
+                                    TouchArea  {
+                                        clicked =>  {
+                                            root.select-channel(index);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Rectangle  {
+                    background: root.surface;
+                    border-radius: 9px;
+                    border-width: 1px;
+                    border-color: root.outline;
+                    height: 216px;
+                    VerticalBox  {
+                        padding: 12px;
+                        spacing: 7px;
+                        HorizontalLayout  {
+                            height: 20px;
+                            Caption  {
+                                text: "Editar canal " + (root.selected + 1);
+                                font-size: 14px;
+                            }
+                            Rectangle  {
+                                horizontal-stretch: 1;
+                            }
+                            Text  {
+                                text: root.form-dirty ? "Pendiente de aplicar" : "Formulario sincronizado";
+                                color: root.form-dirty ? (root.dark ? #f4c36b : #94600e) : root.muted;
+                                font-size: 11px;
+                            }
+                        }
+                        HorizontalLayout  {
+                            spacing: 8px;
+                            height: 49px;
+                            VerticalBox  {
+                                padding: 0px;
+                                spacing: 3px;
+                                Caption  {
+                                    text: "Frecuencia RX / MHz";
+                                }  LineEdit  {
+                                    text <=> root.editor.rx;
+                                    placeholder-text: "136.00000";
+                                    edited =>  {
+                                        root.form-dirty = true;
+                                    }
+                                }
+                            }
+                            VerticalBox  {
+                                padding: 0px;
+                                spacing: 3px;
+                                Caption  {
+                                    text: "Frecuencia TX / MHz";
+                                }  LineEdit  {
+                                    text <=> root.editor.tx;
+                                    placeholder-text: "TX independiente";
+                                    edited =>  {
+                                        root.form-dirty = true;
+                                    }
+                                }
+                            }
+                            VerticalBox  {
+                                padding: 0px;
+                                spacing: 3px;
+                                Caption  {
+                                    text: "QT/DQT Decode";
+                                }  ComboBox  {
+                                    model: root.decode-options;
+                                    current-index <=> root.decode-index;
+                                    selected(value) =>  {
+                                        root.editor.decode = value;
+                                        root.form-dirty = true;
+                                    }
+                                }
+                            }
+                            VerticalBox  {
+                                padding: 0px;
+                                spacing: 3px;
+                                Caption  {
+                                    text: "QT/DQT Encode";
+                                }  ComboBox  {
+                                    model: root.encode-options;
+                                    current-index <=> root.encode-index;
+                                    selected(value) =>  {
+                                        root.editor.encode = value;
+                                        root.form-dirty = true;
+                                    }
+                                }
+                            }
+                        }
+                        HorizontalLayout  {
+                            spacing: 8px;
+                            height: 51px;
+                            VerticalBox  {
+                                padding: 0px;
+                                spacing: 3px;
+                                Caption  {
+                                    text: "Potencia";
+                                }  ComboBox  {
+                                    model: ["Desconocida", "High / 5 W", "Low / 1 W"];
+                                    current-index <=> root.editor.power;
+                                    selected(value) =>  {
+                                        root.form-dirty = true;
+                                    }
+                                }
+                            }
+                            VerticalBox  {
+                                padding: 0px;
+                                spacing: 3px;
+                                Caption  {
+                                    text: "Ancho";
+                                }  ComboBox  {
+                                    model: ["Desconocido", "Wide / 25 kHz", "Narrow / 12.5 kHz"];
+                                    current-index <=> root.editor.bandwidth;
+                                    selected(value) =>  {
+                                        root.form-dirty = true;
+                                    }
+                                }
+                            }
+                            VerticalBox  {
+                                padding: 0px;
+                                spacing: 3px;
+                                Caption  {
+                                    text: "Scan Add";
+                                }  ComboBox  {
+                                    model: ["Desconocido", "Sí", "No"];
+                                    current-index <=> root.editor.scan;
+                                    selected(value) =>  {
+                                        root.form-dirty = true;
+                                    }
+                                }
+                            }
+                            VerticalBox  {
+                                padding: 0px;
+                                spacing: 3px;
+                                CheckBox  {
+                                    text: "Señalización conocida";
+                                    checked <=> root.editor.optional-known;
+                                    toggled =>  {
+                                        root.form-dirty = true;
+                                    }
+                                }  LineEdit  {
+                                    text <=> root.editor.optional;
+                                    enabled: root.editor.optional-known;
+                                    placeholder-text: "Valor de Optional Signaling";
+                                    edited =>  {
+                                        root.form-dirty = true;
+                                    }
+                                }
+                            }
+                        }
+                        Text  {
+                            text: "QT = CTCSS · DQT = DCS (N normal / I invertido) · Decode: recepción · Encode: transmisión";
+                            color: root.muted;
+                            font-size: 11px;
+                            height: 15px;
+                            overflow: elide;
+                        }
+                        HorizontalLayout  {
+                            spacing: 8px;
+                            height: 32px;
+                            Button  {
+                                text: "Aplicar canal";
+                                clicked =>  {
+                                    root.apply-editor();
+                                }
+                            }
+                            Button  {
+                                text: "Restablecer";
+                                clicked =>  {
+                                    root.form-dirty = false;
+                                    root.select-channel(root.selected);
+                                }
+                            }
+                            Rectangle  {
+                                horizontal-stretch: 1;
+                            }
+                            Button  {
+                                text: "Eliminar canal";
+                                clicked =>  {
+                                    root.remove-channel();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if root.active-section == 1 : Rectangle  {
+                background: root.surface;
+                border-radius: 10px;
+                border-width: 1px;
+                border-color: root.outline;
+                VerticalBox  {
+                    padding: 24px;
+                    spacing: 16px;
+                    Text  {
+                        text: "Archivos";
+                        color: Palette.foreground;
+                        font-size: 24px;
+                        font-weight: 600;
+                        height: 34px;
+                    }
+                    Caption  {
+                        text: "Abrir configuración";
+                        font-size: 14px;
+                        height: 24px;
+                    }
+                    Text  {
+                        text: root.source-path == "" ? "Ningún archivo abierto" : root.source-path;
+                        color: root.muted;
+                        wrap: word-wrap;
+                        min-height: 34px;
+                    }
+                    HorizontalLayout  {
+                        height: 36px;
+                        Button  {
+                            text: "Escoger archivo…";
+                            clicked =>  {
+                                root.choose-file();
+                            }
+                        }
+                        Text  {
+                            text: "DAT · JSON · CSV";
+                            color: root.muted;
+                            vertical-alignment: center;
+                        }
+                        Rectangle  {
+                            horizontal-stretch: 1;
+                        }
+                    }
+                    if root.dirty || root.form-dirty : CheckBox  {
+                        text: "Descartar los cambios pendientes al abrir otro archivo";
+                        checked <=> root.discard-authorized;
+                    }
+                    Rectangle  {
+                        height: 1px;
+                        background: root.outline;
+                    }
+                    Caption  {
+                        text: "Guardar una copia";
+                        font-size: 14px;
+                        height: 24px;
+                    }
+                    HorizontalLayout  {
+                        height: 36px;
+                        spacing: 12px;
+                        ComboBox  {
+                            width: 190px;
+                            model: ["DAT · Kenwood", "JSON", "CSV"];
+                            current-index <=> root.save-format;
+                        }
+                        Button  {
+                            text: "Guardar como…";
+                            enabled: !root.form-dirty && (root.save-format != 0 || root.can-dat);
+                            clicked =>  {
+                                root.save-as(root.save-format);
+                            }
+                        }
+                        Rectangle  {
+                            horizontal-stretch: 1;
+                        }
+                    }
+                    Text  {
+                        text: "El explorador permite escoger carpeta y nombre. Elija un nombre nuevo: el archivo abierto y los destinos existentes se conservan.";
+                        color: root.muted;
+                        wrap: word-wrap;
+                        height: 42px;
+                    }
+                    Text  {
+                        text: root.save-format != 0 ? "Guarda la configuración del modelo, incluida señalización None y DQT." : root.can-dat ? "DAT disponible para los cambios aplicados." : "DAT no disponible para estos cambios. None/DQT, canales nuevos y campos sin codificación comprobada se pueden conservar en JSON/CSV.";
+                        color: root.muted;
+                        wrap: word-wrap;
+                        height: 42px;
+                    }
+                    if root.last-saved != "" : Text  {
+                        text: "Último guardado: " + root.last-saved;
+                        color: root.muted;
+                        wrap: word-wrap;
+                        min-height: 36px;
+                    }
+                    Text  {
+                        text: "Los respaldos y la recuperación se guardan automáticamente. Aplique las modificaciones del canal antes de guardar.";
+                        color: root.muted;
+                        wrap: word-wrap;
+                        height: 40px;
+                    }
+                    Rectangle  {
+                        vertical-stretch: 1;
+                    }
+                    if root.dirty || root.form-dirty : HorizontalLayout  {
+                        height: 34px;
+                        Button  {
+                            text: "Cerrar descartando cambios";
+                            enabled: !root.read-busy;
+                            clicked =>  {
+                                root.close-discard();
+                            }
+                        }
+                        Rectangle  {
+                            horizontal-stretch: 1;
+                        }
+                    }
+                }
+            }
+            if root.active-section == 2 : Rectangle  {
+                background: root.surface;
+                border-radius: 10px;
+                border-width: 1px;
+                border-color: root.outline;
+                VerticalBox  {
+                    padding: 24px;
+                    spacing: 16px;
+                    Text  {
+                        text: "Conexión con la radio";
+                        color: Palette.foreground;
+                        font-size: 24px;
+                        font-weight: 600;
+                        height: 34px;
+                    }
+                    Text  {
+                        text: root.connection-status;
+                        color: root.dark ? #87c9f3 : #176794;
+                        font-size: 14px;
+                        height: 26px;
+                    }
+                    Text  {
+                        text: "Elija el puerto y pulse Leer configuración de la radio. Cierre KPG y mantenga la radio encendida. No necesita abrir ningún archivo primero.";
+                        color: root.muted;
+                        wrap: word-wrap;
+                        height: 42px;
+                    }
+                    HorizontalLayout  {
+                        height: 36px;
+                        Button  {
+                            text: "Detectar puertos serie";
+                            clicked =>  {
+                                root.ports();
+                            }
+                        }
+                        Rectangle  {
+                            horizontal-stretch: 1;
+                        }
+                    }
+                    HorizontalLayout  {
+                        height: 36px;
+                        spacing: 10px;
+                        ComboBox  {
+                            model: root.port-options;
+                            current-index <=> root.port-index;
+                            enabled: !root.read-busy && root.port-options.length > 0;
+                        }
+                        Button  {
+                            text: root.read-busy ? "Puerto ocupado…" : "Identificar radio";
+                            enabled: !root.read-busy && root.port-options.length > 0;
+                            clicked =>  {
+                                root.identify-radio(root.port-options[root.port-index]);
+                            }
+                        }
+                    }
+                    HorizontalLayout  {
+                        height: 40px;
+                        spacing: 12px;
+                        Button  {
+                            text: root.read-busy ? "Lectura en curso…" : "Leer configuración de la radio";
+                            enabled: !root.read-busy && root.port-options.length > 0;
+                            clicked =>  {
+                                root.read-radio(root.port-options[root.port-index]);
+                            }
+                        }
+                        Button  {
+                            text: "Escribir cambios en la radio";
+                            enabled: !root.read-busy && root.port-options.length > 0;
+                            clicked =>  {
+                                root.write-radio(root.port-options[root.port-index]);
+                            }
+                        }
+                        Text  {
+                            text: root.transfer-progress;
+                            color: Palette.foreground;
+                            vertical-alignment: center;
+                        }
+                    }
+                    Rectangle  {
+                        height: 6px;
+                        background: root.outline;
+                        border-radius: 3px;
+                        Rectangle  {
+                            width: parent.width * root.read-bytes / 8192;
+                            height: parent.height;
+                            background: #53b6f4;
+                            border-radius: 3px;
+                        }
+                    }
+                    Text  {
+                        text: "La lectura guarda una imagen completa y carga los canales al finalizar. El perfil activo admite TK-2402K; las respuestas no reconocidas detienen la operación y quedan en el diagnóstico.";
+                        color: root.muted;
+                        wrap: word-wrap;
+                        height: 56px;
+                    }
+                    Text  {
+                        text: "La escritura respalda la configuración actual, aplica los cambios admitidos y verifica toda la imagen mediante una conexión nueva. Consulte la compatibilidad del perfil antes de programar.";
+                        color: root.muted;
+                        wrap: word-wrap;
+                        height: 48px;
+                    }
+                    Rectangle  {
+                        vertical-stretch: 1;
+                    }
+                    Text  {
+                        text: "Resultados de detección y validación en el registro inferior.";
+                        color: root.muted;
+                        wrap: word-wrap;
+                        height: 32px;
+                    }
+                }
+            }
+        }
+        Rectangle  {
+            height: root.details-expanded ? 190px : 112px;
+            background: root.surface;
+            border-radius: 9px;
+            border-width: 1px;
+            border-color: root.error ? (root.dark ? #864750 : #bd6069) : root.outline;
+            VerticalBox  {
+                padding: 9px;
+                spacing: 5px;
+                HorizontalLayout  {
+                    height: 28px;
+                    spacing: 12px;
+                    Text  {
+                        text: root.status;
+                        color: root.error ? (root.dark ? #ffa7a7 : #a51323) : Palette.foreground;
+                        wrap: word-wrap;
+                        font-size: 12px;
+                        horizontal-stretch: 1;
+                    }
+                    Button  {
+                        text: root.details-expanded ? "Reducir registro" : "Ampliar registro";
+                        clicked =>  {
+                            root.details-expanded = !root.details-expanded;
+                        }
+                    }
+                }
+                TextEdit  {
+                    text: root.details;
+                    read-only: true;
+                    vertical-stretch: 1;
+                }
+            }
+        }
+    }
+}
