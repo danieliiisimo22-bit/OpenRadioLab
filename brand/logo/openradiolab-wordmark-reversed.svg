@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 220" width="1000" height="220"><rect width="1000" height="220" fill="#172E3B"/><g transform="translate(116,108) scale(1.26)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 31 -35 A 47 47 0 1 0 41 23" stroke="#A6E2DD" stroke-width="9"/>
+    <path d="M -29 -15 Q -42 0 -29 15" stroke="#A6E2DD" stroke-width="6"/>
+    <path d="M 29 -15 Q 42 0 29 15" stroke="#A6E2DD" stroke-width="6"/>
+    <path d="M -12 0 H 12" stroke="#A6E2DD" stroke-width="7"/>
+    <circle cx="0" cy="0" r="6.5" fill="#A6E2DD" stroke="none"/>
+    </g><text x="230" y="141" font-family="'Inter', 'Arial', sans-serif" font-size="94" font-weight="700" fill="#FFFFFF" letter-spacing="-3">Open</text><text x="480" y="141" font-family="'Inter', 'Arial', sans-serif" font-size="94" font-weight="700" fill="#A6E2DD" letter-spacing="-3">RadioLab</text></svg>

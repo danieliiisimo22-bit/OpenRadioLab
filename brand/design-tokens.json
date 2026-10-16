@@ -1,0 +1,38 @@
+{
+  "project": "OpenRadioLab",
+  "version": "1.0",
+  "font_family": [
+    "Inter",
+    "Arial",
+    "sans-serif"
+  ],
+  "weights": {
+    "body": 400,
+    "ui": 600,
+    "heading": 700
+  },
+  "colors": {
+    "ink": "#172E3B",
+    "marine": "#214A58",
+    "teal": "#217C84",
+    "teal_light": "#E2F1F0",
+    "mist": "#F6F8F7",
+    "white": "#FFFFFF",
+    "slate": "#526670",
+    "line": "#D6E2E1",
+    "soft": "#AAC1C6",
+    "deep": "#10242F"
+  },
+  "spacing_px": [
+    8,
+    16,
+    24,
+    32,
+    48,
+    64
+  ],
+  "corner_radius_px": {
+    "card": 12,
+    "small": 6
+  }
+}

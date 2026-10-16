@@ -1,91 +1,78 @@
-# Open Radio Lab
+<div align="center">
+  <img src="brand/banners/github-hero-en.png" alt="OpenRadioLab — Modern radio programming, built for reliability and openness" width="100%" />
 
-Native tools for inspecting, editing and programming supported two-way radios.
+  <h1>OpenRadioLab</h1>
+  <p><strong>Your radio. Your channels. Your lab.</strong></p>
 
-**Version:** 0.6.0 · **License:** GPL-3.0-only · **Desktop UI:** Slint · **Core:** Rust
+  <a href="https://github.com/danieliiisimo22-bit/OpenRadioLab/actions/workflows/ci.yml"><img src="https://github.com/danieliiisimo22-bit/OpenRadioLab/actions/workflows/ci.yml/badge.svg?branch=main" alt="Windows build and tests" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-217C84" alt="GPL-3.0-only license" /></a>
 
-Open Radio Lab focuses on documented device profiles, byte-preserving configuration files and verified device operations. It is a working hardware tool. The current implementation supports one TK-2402K profile; the project name does not imply universal radio support.
+  <p><a href="README.es.md">Español</a> · <a href="#get-started">Get started</a> · <a href="docs/compatibility.md">Compatibility</a> · <a href="CONTRIBUTING.md">Contribute</a></p>
+</div>
 
-[Guía en español](docs/quickstart.es.md) · [Compatibility](docs/compatibility.md) · [Architecture](docs/architecture.md) · [Source languages](docs/source-languages.md)
+**Read your radio, edit your channels and write your changes back.** OpenRadioLab is a free, open-source desktop app built with Rust and Slint. It brings channel editing, file tools and direct radio programming into one native workspace.
 
-## Features
+Currently tested on **Windows x86-64 with the Kenwood TK-2402K**. Version **0.6.0** is a development preview.
 
-- Native desktop editor with 16 channel positions and separate RX/TX and Decode/Encode settings.
-- Windows file dialogs for Open and Save As; DAT, JSON and CSV interchange.
-- Direct serial read without opening an input file first.
-- Configuration writes with a complete live backup, a restricted change plan and full-image verification through a new connection.
-- Undo/redo, recovery snapshots and preservation of unknown binary fields.
-- A CLI for file inspection, normalized binary differences, exports and serial reads.
+## From cable to channels
 
-## Supported scope
+| Read | Edit | Program |
+| --- | --- | --- |
+| Choose your serial port and load the radio directly. No DAT file needed first. | Work with 16 channel positions, separate RX/TX and QT Decode/Encode settings. | Back up the live configuration, apply supported changes and verify a complete readback. |
 
-| Area | Current status |
-| --- | --- |
-| Desktop platform | Windows x86-64 tested; Linux/macOS not validated |
-| Device profile | TK-2402 family identification, K-type writes |
-| DAT container | KPG-158D V2.20, 8257 bytes, with an 8192-byte image |
-| Physically exercised | Identification, full read, Scan Add CH1 write and full-image verification |
-| Additional field tests | RX/TX frequencies and QT Encode/Decode writes reported successful by a hardware tester |
-| Editable DAT fields | Existing active RX/TX, QT-to-QT, power, bandwidth and Scan Add CH1 |
-| Remaining DAT work | None/DQT encoding, adding/removing channels, other Scan Add positions and optional/global settings |
+## What you can do
 
-None/DQT values can be represented in JSON/CSV and selected in the UI. That does not imply their binary DAT encoding is implemented. Unsupported edits are rejected. See [compatibility and validation](docs/compatibility.md) for the evidence boundaries.
+- **Work with real hardware.** Identify, read and program the supported radio over a USB programming cable.
+- **Keep your files organized.** Open and save DAT files, or exchange configurations as JSON and CSV.
+- **Edit with room to undo.** Undo/redo, recovery snapshots and preservation of unknown binary fields are built in.
+- **Go deeper from the terminal.** Inspect files, compare binary images, export configurations and read a radio with the CLI.
 
-## Build
+The current DAT editor supports existing active RX/TX frequencies, QT-to-QT tone changes, power, bandwidth and Scan Add on channel 1. None/DQT binary edits, adding or removing channels and other scan positions are still pending. The UI can display more tone choices than the DAT writer currently supports; unsupported writes are rejected. See [compatibility and validation](docs/compatibility.md) for the exact scope.
 
-Install a Rust toolchain and the native compiler required by your platform. Rust 1.99 or later is the supported toolchain baseline for this release.
+## Get started
+
+Install **Rust 1.99+** and the native compiler for your platform, then:
 
 ```sh
-cargo build --locked --workspace
+git clone https://github.com/danieliiisimo22-bit/OpenRadioLab.git
+cd OpenRadioLab
 cargo run --locked -p radio-app
 ```
 
-Windows contributors can use:
+See the [Windows build guide](docs/build.md) for compiler setup. Published packages, when available, belong in [Releases](https://github.com/danieliiisimo22-bit/OpenRadioLab/releases).
 
-```powershell
-./scripts/dev.ps1 -Action check
-./scripts/dev.ps1 -Action build
-./scripts/dev.ps1 -Action run
-```
+In the app:
 
-See [build instructions](docs/build.md). Source archives do not contain executables; portable binaries belong in a release asset, with corresponding source and dependency notices.
+1. **Conexión** → select your port → **Leer configuración de la radio**.
+2. **Canales** → edit a channel → **Aplicar canal**.
+3. **Archivos → Guardar como…** to save a file, or return to **Conexión** to write supported changes.
 
-## Use the application
+Close other radio programming applications before opening the port. The interface is currently in Spanish; English and Spanish project guides are available.
 
-1. Open **Conexión**, select the radio's serial port, and choose **Leer configuración de la radio**. An input DAT is optional.
-2. Edit a channel in **Canales**, then choose **Aplicar canal**.
-3. Use **Archivos → Guardar como…** to save a separate file, or **Conexión → Escribir cambios en la radio** to program the supported changes.
+## On the bench
 
-Close other programming applications while accessing a port. A write first reads the radio and persists a backup, applies supported differences to the live image, writes only changed blocks, then reconnects and compares all image bytes. An ambiguous response stops the operation without automatic retry or rollback.
+Hardware tests cover identification, a full read and a channel 1 Scan Add write with automatic full-image verification. RX/TX frequency and QT Encode/Decode changes have also been reported successful on hardware. The [validation notes](docs/compatibility.md) distinguish these results from software tests.
 
-The current UI is Spanish. Code, architecture and contribution documentation use English.
+Next up: more DAT settings, real project photos and a programming video. Additional device profiles will need their own validation. Linux and macOS are not yet validated.
 
-## CLI
+## Explore the lab
 
-```sh
-cargo run --locked -p dat-analyzer -- profile.dat
-cargo run --locked -p dat-analyzer -- diff before.dat after.dat
-cargo run --locked -p dat-analyzer -- export-json profile.dat profile.json
-cargo run --locked -p dat-analyzer -- export-csv profile.dat profile.csv
-cargo run --locked -p dat-analyzer -- ports
-cargo run --locked -p dat-analyzer -- read-radio SERIAL_PORT readback.dat
-```
+| Looking for… | Start here |
+| --- | --- |
+| A walkthrough in Spanish | [Quick start](docs/quickstart.es.md) |
+| Build instructions and software checks | [Build guide](docs/build.md) |
+| CLI examples and the full technical overview | [Technical overview](docs/technical-overview.md) |
+| How the code fits together | [Architecture](docs/architecture.md) |
+| File layouts and serial commands | [DAT format](docs/dat-format.md) · [Radio protocol](docs/protocol-tk2402.md) |
 
-Replace `SERIAL_PORT` with the port reported on your system. Listing ports does not open a device. Physical operations require an explicit command or button action.
+## Help build it
 
-## Check the source
+Found a bug, tested a setup or mapped a new field? [Open an issue](https://github.com/danieliiisimo22-bit/OpenRadioLab/issues) or read the [contribution guide](CONTRIBUTING.md). Useful hardware reports and clear reproduction steps help the lab grow.
 
-```sh
-cargo fmt --all --check
-cargo clippy --locked --workspace --all-targets -- -D warnings
-cargo test --locked --workspace
-node scripts/source-inventory.cjs --check
-node scripts/check-public-source.cjs
-```
+<details>
+<summary><strong>What's it built with?</strong></summary>
 
-Software tests run without a connected radio. GitHub Actions is configured for Windows software checks; a workflow file is not evidence of a successful hosted run or a physical device test.
-
-## Language composition
+Rust handles the application and radio workflows; Slint defines the native interface. These measured shares include first-party code, tests and development scripts, by UTF-8 bytes.
 
 <!-- source-languages:start -->
 
@@ -99,25 +86,12 @@ Software tests run without a connected radio. GitHub Actions is configured for W
 
 <!-- source-languages:end -->
 
-The [generated language report](docs/source-languages.md) shows percentages by UTF-8 bytes of first-party application code, tests and scripts. Its [JSON inventory](docs/source-inventory.json) lists every counted file and hash. Dependencies, binary releases, documentation, manifests and generated files are excluded.
+The [source inventory](docs/source-inventory.json) records every counted file and hash. Documentation, dependencies and generated files are excluded. [GitHub Linguist](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-repository-languages) may classify the repository differently.
 
-GitHub uses [Linguist](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-repository-languages) for its language bar, so its classification can differ. The repository does not relabel Slint or scripts as Rust.
+</details>
 
-## Project layout
+---
 
-| Path | Responsibility |
-| --- | --- |
-| `crates/radio-model` | Validated channel types and JSON/CSV interchange |
-| `crates/dat-format` | Binary container parsing and supported, byte-preserving edits |
-| `crates/radio-serial` | Port discovery, device profile and restricted write plans |
-| `crates/radio-app` | Slint UI, editor state, file dialogs and programming workflow |
-| `crates/dat-analyzer` | Command-line inspection and conversion |
-| `docs` | Format, protocol, compatibility and contributor documentation |
-| `scripts` | Checks, source reports and dependency-notice tooling |
+[GPL-3.0-only](LICENSE) · [Third-party notices](THIRD_PARTY.md) · [Development provenance](docs/provenance.md)
 
-## License and provenance
-
-Project source is licensed under [GPL-3.0-only](LICENSE). See [third-party components](THIRD_PARTY.md) and [provenance](docs/provenance.md). Required dependency notices are retained when packaging binaries.
-
-Radio and vendor names identify technical compatibility. Open Radio Lab is an independent project and is not an official vendor product. No vendor executable, firmware, manual, decompiled listing or private device configuration is included.
-
+OpenRadioLab is an independent project. Manufacturer and model names identify compatibility; they do not imply affiliation or endorsement.
